@@ -89,10 +89,7 @@ class VlanInterface(ifconfig.Interface):
 
     def get_realdev_name(self):
         '''Get the underlying netdev for a VLAN interface.'''
-        ioc = struct.pack('i24s26x', GET_VLAN_REALDEV_NAME_CMD, self.name)
-        result = struct.unpack('i24s24s2x', fcntl.ioctl(ifconfig.sockfd,
-                                                        SIOCGIFVLAN, ioc))
-        return result[2].rstrip('\0')
+        return get_realdev_name(self.name)
 
     def del_vlan(self):
         '''Delete the VLAN from this interface. The VlanInterface object
@@ -108,6 +105,13 @@ def add_vlan(ifname, vid):
     except IOError:
       return False
     return True
+
+def get_realdev_name(ifname):
+    '''Get the underlying netdev for a VLAN interface.'''
+    ioc = struct.pack('i24s26x', GET_VLAN_REALDEV_NAME_CMD, ifname)
+    result = struct.unpack('i24s24s2x', fcntl.ioctl(ifconfig.sockfd,
+                                                    SIOCGIFVLAN, ioc))
+    return result[2].rstrip('\0')
 
 def shutdown():
     ''' Shut down the library '''
