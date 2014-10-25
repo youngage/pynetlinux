@@ -16,6 +16,7 @@ This library contains Python bindings to ioctl calls
     * Create and destroy bridges
     * Add/remove interfaces to bridges
     * Set forwarding delay
+    * Set STP mode
 
 * tap
     * Create and destroy taps
@@ -35,4 +36,5 @@ This library contains Python bindings to ioctl calls
 * Anoop Karollil
 * Richard Feng
 * Denton Gentry
+* Matthew Stone
 
