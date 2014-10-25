@@ -8,10 +8,10 @@ from . import ifconfig
 SYSFS_NET_PATH = "/sys/class/net"
 
 # From linux/sockios.h
-SIOCBRADDBR  = 0x89a0
-SIOCBRDELBR  = 0x89a1
-SIOCBRADDIF  = 0x89a2
-SIOCBRDELIF  = 0x89a3
+SIOCBRADDBR = 0x89a0
+SIOCBRDELBR = 0x89a1
+SIOCBRADDIF = 0x89a2
+SIOCBRDELIF = 0x89a3
 
 SIOCDEVPRIVATE = 0x89F0
 
@@ -30,20 +30,17 @@ class Bridge(ifconfig.Interface):
     def __init__(self, name):
         ifconfig.Interface.__init__(self, name)
 
-
     def iterifs(self):
         ''' Iterate over all the interfaces in this bridge. '''
         if_path = os.path.join(SYSFS_NET_PATH, self.name, "brif")
         net_files = os.listdir(if_path)
         for iface in net_files:
             yield iface
-        
-        
+
     def listif(self):
         ''' List interface names. '''
         return [p for p in self.iterifs()]
-        
-        
+
     def addif(self, iface):
         ''' Add the interface with the given name to this bridge. Equivalent to
             brctl addif [bridge] [interface]. '''
@@ -54,8 +51,7 @@ class Bridge(ifconfig.Interface):
         ifreq = struct.pack('16si', self.name, devindex)
         fcntl.ioctl(ifconfig.sockfd, SIOCBRADDIF, ifreq)
         return self
-        
-        
+
     def delif(self, iface):
         ''' Remove the interface with the given name from this bridge.
             Equivalent to brctl delif [bridge] [interface]'''
@@ -64,11 +60,12 @@ class Bridge(ifconfig.Interface):
         else:
             devindex = ifconfig.Interface(iface).index
         ifreq = struct.pack('16si', self.name, devindex)
-        fcntl.ioctl(ifconfig.sockfd, SIOCBRDELIF, ifreq)    
+        fcntl.ioctl(ifconfig.sockfd, SIOCBRDELIF, ifreq)
         return self
 
     def set_stp_mode(self, status):
-        '''Set the status of spanning tree on bridge. Called using bridge.set_stp_mode([True,False])'''
+        '''Set the status of spanning tree on bridge.
+           Called using bridge.set_stp_mode([True,False])'''
         if status is True:
             status = 1
         else:
@@ -94,12 +91,10 @@ class Bridge(ifconfig.Interface):
         fcntl.ioctl(ifconfig.sockfd, SIOCBRDELBR, self.name)
         return self
 
-        
     def get_ip(self):
         ''' Bridges don't have IP addresses, so this always returns 0.0.0.0. '''
         return "0.0.0.0"
-        
-    
+
     ip = property(get_ip)
 
 
@@ -123,7 +118,7 @@ def list_bridges():
     ''' Return a list of the names of the bridge interfaces. '''
     return [br for br in iterbridges()]
 
-    
+
 def addbr(name):
     ''' Create new bridge with the given name '''
     fcntl.ioctl(ifconfig.sockfd, SIOCBRADDBR, name)
@@ -147,4 +142,3 @@ def findbridge(name):
         if br.name == name:
             return br
     return None
-

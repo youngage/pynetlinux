@@ -80,8 +80,8 @@ PROCFS_NET_PATH = "/proc/net/dev"
 # From linux/sockios.h
 SIOCGIFCONF = 0x8912
 SIOCGIFINDEX = 0x8933
-SIOCGIFFLAGS =  0x8913
-SIOCSIFFLAGS =  0x8914
+SIOCGIFFLAGS = 0x8913
+SIOCSIFFLAGS = 0x8914
 SIOCGIFHWADDR = 0x8927
 SIOCSIFHWADDR = 0x8924
 SIOCGIFADDR = 0x8915
@@ -91,20 +91,20 @@ SIOCSIFNETMASK = 0x891C
 SIOCETHTOOL = 0x8946
 
 # From linux/if.h
-IFF_UP       = 0x1
+IFF_UP = 0x1
 
 # From linux/socket.h
-AF_UNIX      = 1
-AF_INET      = 2
+AF_UNIX = 1
+AF_INET = 2
 
 # From linux/ethtool.h
-ETHTOOL_GSET = 0x00000001 # Get settings
-ETHTOOL_SSET = 0x00000002 # Set settings
-ETHTOOL_GLINK = 0x0000000a # Get link status (ethtool_value)
-ETHTOOL_SPAUSEPARAM = 0x00000013 # Set pause parameters.
+ETHTOOL_GSET = 0x00000001  # Get settings
+ETHTOOL_SSET = 0x00000002  # Set settings
+ETHTOOL_GLINK = 0x0000000a  # Get link status (ethtool_value)
+ETHTOOL_SPAUSEPARAM = 0x00000013  # Set pause parameters.
 
 ADVERTISED_10baseT_Half = (1 << 0)
-ADVERTISED_10baseT_Full =(1 << 1)
+ADVERTISED_10baseT_Full = (1 << 1)
 ADVERTISED_100baseT_Half = (1 << 2)
 ADVERTISED_100baseT_Full = (1 << 3)
 ADVERTISED_1000baseT_Half = (1 << 4)
@@ -129,6 +129,7 @@ if not os.path.isdir(SYSFS_NET_PATH):
     raise ImportError("Path %s not found. This module requires sysfs." % SYSFS_NET_PATH)
 if not os.path.exists(PROCFS_NET_PATH):
     raise ImportError("Path %s not found. This module requires procfs." % PROCFS_NET_PATH)
+
 
 class Interface(object):
     ''' Class representing a Linux network device. '''
@@ -185,14 +186,12 @@ class Interface(object):
 
         return ":".join(['%02X' % i for i in mac])
 
-
     def set_mac(self, newmac):
         ''' Set the device's mac address. Device must be down for this to
             succeed. '''
         macbytes = [int(i, 16) for i in newmac.split(':')]
         ifreq = struct.pack('16sH6B8x', self.name, AF_UNIX, *macbytes)
         fcntl.ioctl(sockfd, SIOCSIFHWADDR, ifreq)
-
 
     def get_ip(self):
         ifreq = struct.pack('16sH14s', self.name, AF_INET, '\x00'*14)
@@ -204,12 +203,11 @@ class Interface(object):
 
         return socket.inet_ntoa(ip)
 
-
     def set_ip(self, newip):
         ipbytes = socket.inet_aton(newip)
-        ifreq = struct.pack('16sH2s4s8s', self.name, AF_INET, '\x00'*2, ipbytes, '\x00'*8)
+        ifreq = struct.pack('16sH2s4s8s',
+                            self.name, AF_INET, '\x00'*2, ipbytes, '\x00'*8)
         fcntl.ioctl(sockfd, SIOCSIFADDR, ifreq)
-
 
     def get_netmask(self):
         ifreq = struct.pack('16sH14s', self.name, AF_INET, '\x00'*14)
@@ -222,20 +220,18 @@ class Interface(object):
         return 32 - int(round(
             math.log(ctypes.c_uint32(~netmask).value + 1, 2), 1))
 
-
     def set_netmask(self, netmask):
         netmask = ctypes.c_uint32(~((2 ** (32 - netmask)) - 1)).value
         nmbytes = socket.htonl(netmask)
-        ifreq = struct.pack('16sH2sI8s', self.name, AF_INET, '\x00'*2, nmbytes, '\x00'*8) 
+        ifreq = struct.pack('16sH2sI8s',
+                            self.name, AF_INET, '\x00'*2, nmbytes, '\x00'*8)
         fcntl.ioctl(sockfd, SIOCSIFNETMASK, ifreq)
-
 
     def get_index(self):
         ''' Convert an interface name to an index value. '''
         ifreq = struct.pack('16si', self.name, 0)
         res = fcntl.ioctl(sockfd, SIOCGIFINDEX, ifreq)
         return struct.unpack("16si", res)[1]
-
 
     def get_link_info(self):
         # First get link params
@@ -267,7 +263,6 @@ class Interface(object):
             auto = bool(auto)
         return speed, duplex, auto, up
 
-
     def set_link_mode(self, speed, duplex):
         # First get the existing info
         ecmd = array.array('B', struct.pack('I39s', ETHTOOL_GSET, '\x00'*39))
@@ -278,10 +273,9 @@ class Interface(object):
         ecmd[0:4] = array.array('B', struct.pack('I', ETHTOOL_SSET))
         ecmd[12:14] = array.array('B', struct.pack('H', speed))
         ecmd[14] = int(duplex)
-        ecmd[18] = 0 # Autonegotiation is off
+        ecmd[18] = 0  # Autonegotiation is off
         #print ecmd
         fcntl.ioctl(sockfd, SIOCETHTOOL, ifreq)
-
 
     def set_link_auto(self, ten=True, hundred=True, thousand=True):
         # First get the existing info
@@ -305,7 +299,6 @@ class Interface(object):
         ecmd[8:12] = array.array('B', struct.pack('I', newmode))
         ecmd[18] = 1
         fcntl.ioctl(sockfd, SIOCETHTOOL, ifreq)
-        
 
     def set_pause_param(self, autoneg, rx_pause, tx_pause):
         """
@@ -317,7 +310,8 @@ class Interface(object):
         """
         # create a struct ethtool_pauseparm
         # create a struct ifreq with its .ifr_data pointing at the above
-        ecmd = array.array('B', struct.pack('IIII',
+        ecmd = array.array('B', struct.pack(
+            'IIII',
             ETHTOOL_SPAUSEPARAM, bool(autoneg), bool(rx_pause), bool(tx_pause)))
         import logging
         logging.error("ecmd %r %r", self.name, ecmd)
@@ -352,7 +346,7 @@ class Interface(object):
 
     index = property(get_index)
     mac = property(get_mac, set_mac)
-    ip  = property(get_ip, set_ip)
+    ip = property(get_ip, set_ip)
     netmask = property(get_netmask, set_netmask)
 
 
@@ -400,6 +394,7 @@ def findif(name):
             return br
     return None
 
+
 def list_ifs(physical=True):
     ''' Return a list of the names of the interfaces. If physical is
         true, then return only real physical interfaces (not 'lo', etc). '''
@@ -421,4 +416,3 @@ def shutdown():
 
 # Do this when loading the module
 init()
-

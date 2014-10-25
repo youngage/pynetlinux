@@ -6,7 +6,8 @@ __author__ = 'dgentry@google.com (Denton Gentry)'
 
 import fcntl
 import struct
-import ifconfig
+
+from . import ifconfig
 
 """
 This file makes the following assumptions about data structures:
@@ -95,13 +96,15 @@ class VlanInterface(ifconfig.Interface):
         result = struct.unpack('i24s24sh', fcntl.ioctl(ifconfig.sockfd,
                                                        SIOCSIFVLAN, vlanioc))
 
+
 def add_vlan(ifname, vid):
     vlanioc = struct.pack('i24si22x', ADD_VLAN_CMD, ifname, vid)
     try:
-      fcntl.ioctl(ifconfig.sockfd, SIOCSIFVLAN, vlanioc)
+        fcntl.ioctl(ifconfig.sockfd, SIOCSIFVLAN, vlanioc)
     except IOError:
-      return False
+        return False
     return True
+
 
 def get_realdev_name(ifname):
     '''Get the underlying netdev for a VLAN interface.'''
@@ -110,11 +113,13 @@ def get_realdev_name(ifname):
                                                     SIOCGIFVLAN, ioc))
     return result[2].rstrip('\0')
 
+
 def get_vid(ifname):
     vlanioc = struct.pack('i24s26x', GET_VLAN_VID_CMD, ifname)
     result = struct.unpack('i24si22x', fcntl.ioctl(ifconfig.sockfd,
                                                    SIOCGIFVLAN, vlanioc))
     return int(result[2])
+
 
 def shutdown():
     ''' Shut down the library '''
