@@ -37,4 +37,5 @@ This library contains Python bindings to ioctl calls
 * Richard Feng
 * Denton Gentry
 * Matthew Stone
+* Gabriel Rota
 
