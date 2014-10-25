@@ -235,7 +235,9 @@ class Interface(object):
         return struct.unpack("16si", res)[1]
 
     def get_link_info(self):
-        ''' Retrieves the interface's link status. '''
+        ''' Retrieves the interface's link status (return type: hash),
+            i.e. speed, duplex mode, etc. '''
+
         # First get link params
         ecmd = array.array('B', struct.pack('I39s', ETHTOOL_GSET, '\x00'*39))
         ifreq = struct.pack('16sP', self.name, ecmd.buffer_info()[0])
@@ -263,7 +265,13 @@ class Interface(object):
             auto = None
         else:
             auto = bool(auto)
-        return speed, duplex, auto, up
+
+        return {
+            'speed': speed,
+            'duplex': duplex,
+            'auto': auto,
+            'up': up,
+        }
 
     def set_link_mode(self, speed, duplex):
         ''' Set the interface's link mode. '''
